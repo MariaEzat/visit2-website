@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>📋 كشف زيارات الخدمة</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #f8f9fa;
+    }
+
+    .container {
+      max-width: 900px;
+    }
+
+    .week-range {
+      background: #fff3cd;
+      padding: 10px;
+      border-radius: 8px;
+      margin-top: 10px;
+    }
+
+    .required-star {
+      color: red;
+      margin-right: 4px;
+    }
+
+    #otherServiceInput {
+      border: 2px dashed #28a745;
+      background-color: #e8f9ee;
+      transition: 0.3s ease;
+    }
+
+    #otherServiceInput:focus {
+      border-color: #218838;
+      background-color: #d4f5de;
+      box-shadow: 0 0 6px rgba(33, 136, 56, 0.4);
+    }
+  </style>
+</head>
+
+<body class="p-3">
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h1 class="mb-0">📋 كشف زيارات الخدمة</h1>
+    </div>
+
+    <!-- تحديد الأسبوع -->
+    <div id="weekSelector" class="card mb-3">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="card-title">تحديد التاريخ</h5>
+          <div>
+            <button id="toggleReport" class="btn btn-outline-success">عرض التقرير</button>
+          </div>
+        </div>
+        <div class="row g-3 align-items-end">
+          <div class="col-md-6">
+            <label class="form-label">تاريخ بداية <span class="required-star">*</span></label>
+            <input type="date" id="weekStart" class="form-control" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">تاريخ نهاية <span class="required-star">*</span></label>
+            <input type="date" id="weekEnd" class="form-control" required>
+          </div>
+        </div>
+        <div id="weekInfo" class="week-range mt-3 d-none text-center fw-bold"></div>
+      </div>
+    </div>
+
+    <!-- نموذج إضافة زيارة -->
+    <div id="visitFormCard" class="card mb-3">
+      <div class="card-body">
+        <h5 class="card-title">إضافة زيارة جديدة</h5>
+        <form id="visitForm" novalidate>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">اليوم <span class="required-star">*</span></label>
+              <input type="date" id="visitDate" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">الاسم <span class="required-star">*</span></label>
+              <input type="text" id="familyNames" class="form-control" required>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">نوع الخدمة <span class="required-star">*</span></label>
+              <select id="serviceType" class="form-select mb-2" required>
+                <option value="" disabled selected>اختر نوع الخدمة</option>
+                <option value="مدارس الأحد ابتدائي">مدارس الأحد ابتدائي</option>
+                <option value="إعدادي">إعدادي</option>
+                <option value="ثانوي">ثانوي</option>
+                <option value="الشباب الجامعي">الشباب الجامعي</option>
+                <option value="أخرى">أخرى</option>
+              </select>
+            </div>
+
+            <!-- حقل "أخرى" -->
+            <input type="text" id="otherServiceInput" class="form-control mt-2 d-none"
+              placeholder="✏️ اكتب نوع الخدمة هنا">
+
+            <div class="col-md-6">
+              <label class="form-label">الصف <span class="required-star">*</span></label>
+              <select id="classLevel" class="form-select mb-2" required>
+                <option value="" disabled selected>اختر الصف</option>
+                <option value="الصف الأول">الصف الأول</option>
+                <option value="الصف الثاني">الصف الثاني</option>
+                <option value="الصف الثالث">الصف الثالث</option>
+                <option value="الصف الرابع">الصف الرابع</option>
+                <option value="الصف الخامس">الصف الخامس</option>
+                <option value="الصف السادس">الصف السادس</option>
+              </select>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label">رقم التليفون <span class="required-star">*</span></label>
+              <input type="tel" id="phoneNumber" class="form-control" pattern="^[0-9]{11}$" maxlength="11"
+                oninput="this.value = this.value.replace(/[^0-9]/g, '')" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">العنوان <span class="required-star">*</span></label>
+              <input type="text" id="address" class="form-control" required>
+            </div>
+            <div class="col-md-12">
+              <label class="form-label">ملاحظات </label>
+              <textarea id="notes" class="form-control" rows="2"></textarea>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-success mt-3" id="addVisit" disabled>إضافة الزيارة</button>
+        </form>
+        <div id="successMessage" class="alert alert-success mt-3 d-none text-center">
+          ✅ تمت إضافة الزيارة بنجاح
+        </div>
+      </div>
+    </div>
+
+    <!-- عرض التقرير -->
+    <div id="reportCard" class="card mb-3" style="display:none;">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="card-title mb-3">تقرير زيارات الخدمة</h5>
+          <button id="downloadPdf" class="btn btn-outline-success">تحميل PDF</button>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-bordered table-striped" id="reportTable">
+            <thead class="table-light">
+              <tr>
+                <th>اليوم</th>
+                <th>نوع الخدمة</th>
+                <th>الصف</th>
+                <th>الاسم</th>
+                <th>رقم التليفون</th>
+                <th>العنوان</th>
+                <th>ملاحظات</th>
+              </tr>
+            </thead>
+            <tbody id="reportBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- مكتبات PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  <script>
+    const weekStartInput = document.getElementById('weekStart');
+    const weekEndInput = document.getElementById('weekEnd');
+    const weekInfo = document.getElementById('weekInfo');
+    const visitForm = document.getElementById('visitForm');
+    const addVisitBtn = document.getElementById('addVisit');
+    const toggleReportBtn = document.getElementById('toggleReport');
+    const reportCard = document.getElementById('reportCard');
+    const visitFormCard = document.getElementById('visitFormCard');
+    const reportBody = document.getElementById('reportBody');
+    const downloadBtn = document.getElementById('downloadPdf');
+    const serviceType = document.getElementById('serviceType');
+    const classLevel = document.getElementById('classLevel');
+    const otherServiceInput = document.getElementById('otherServiceInput');
+
+    // ✅ إظهار/إخفاء حقل "أخرى"
+    // ✅ إظهار حقل "أخرى" مكان الصف
+    // ✅ تعريف العناصر
+    const classLevelDiv = classLevel.closest('.col-md-6');
+
+    // ✅ عند تغيير نوع الخدمة
+    serviceType.addEventListener('change', () => {
+      if (serviceType.value === 'أخرى') {
+        // اخفي اختيار الصف
+        classLevelDiv.classList.add('d-none');
+        // خليه مش مطلوب
+        classLevel.required = false;
+
+        // أظهر حقل "أخرى"
+        otherServiceInput.classList.remove('d-none');
+        otherServiceInput.required = true;
+      } else {
+        // أظهر الصف تاني
+        classLevelDiv.classList.remove('d-none');
+        classLevel.required = true;
+
+        // اخفي حقل "أخرى"
+        otherServiceInput.classList.add('d-none');
+        otherServiceInput.required = false;
+        otherServiceInput.value = '';
+      }
+    });
+
+
+    // ✅ إظهار الصفوف حسب نوع الخدمة
+    serviceType.addEventListener('change', () => {
+      const allOptions = [...classLevel.options];
+      allOptions.forEach(opt => opt.hidden = false);
+      if (serviceType.value.includes('إعدادي') || serviceType.value.includes('ثانوي')) {
+        allOptions.forEach((opt, i) => { if (i > 3) opt.hidden = true; });
+      }
+      classLevel.value = "";
+    });
+
+    function getAllVisits() {
+      return JSON.parse(localStorage.getItem('visits')) || [];
+    }
+
+    function loadVisits(start = null, end = null) {
+      const allVisits = getAllVisits();
+      reportBody.innerHTML = '';
+      const filtered = (start && end)
+        ? allVisits.filter(v => {
+          const date = new Date(v.date);
+          return date >= new Date(start) && date <= new Date(end);
+        })
+        : allVisits;
+
+      filtered.forEach(v => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+    <td>${v.date || '-'}</td>
+    <td>${v.serviceType || '-'}</td>
+    <td>${v.classLevel || '-'}</td>
+    <td>${v.familyNames || '-'}</td>
+    <td>${v.phoneNumber || '-'}</td>
+    <td>${v.address || '-'}</td>
+    <td>${v.notes || '-'}</td>`;
+        reportBody.appendChild(tr);
+      });
+
+    }
+
+    function saveWeekAutomatically() {
+      const start = weekStartInput.value;
+      const end = weekEndInput.value;
+      if (start && end) {
+        weekInfo.textContent = `التقرير من ${start} إلى ${end}`;
+        weekInfo.classList.remove('d-none');
+        loadVisits(start, end);
+      }
+    }
+
+    weekStartInput.addEventListener('change', saveWeekAutomatically);
+    weekEndInput.addEventListener('change', saveWeekAutomatically);
+
+    visitForm.addEventListener('input', () => {
+      addVisitBtn.disabled = !visitForm.checkValidity();
+    });
+
+    // ✅ كود الحفظ (مصحح ومختصر)
+    visitForm.addEventListener('submit', e => {
+      e.preventDefault();
+      if (!visitForm.checkValidity()) return;
+
+      const selectedService =
+        serviceType.value === 'أخرى'
+          ? `أخرى (${otherServiceInput.value.trim()})`
+          : serviceType.value;
+
+      const visit = {
+        date: document.getElementById('visitDate').value,
+        serviceType: selectedService,
+        classLevel: document.getElementById('classLevel').value,
+        familyNames: document.getElementById('familyNames').value,
+        phoneNumber: document.getElementById('phoneNumber').value,
+        address: document.getElementById('address').value,
+        notes: document.getElementById('notes').value
+      };
+
+      const allVisits = getAllVisits();
+      allVisits.push(visit);
+      localStorage.setItem('visits', JSON.stringify(allVisits));
+
+      visitForm.reset();
+      otherServiceInput.classList.add('d-none');
+      addVisitBtn.disabled = true;
+      alert('✅ تمت إضافة الزيارة بنجاح');
+    });
+
+    toggleReportBtn.addEventListener('click', () => {
+      const start = weekStartInput.value;
+      const end = weekEndInput.value;
+      const showingReport = reportCard.style.display === 'block';
+      if (showingReport) {
+        reportCard.style.display = 'none';
+        visitFormCard.style.display = 'block';
+        weekInfo.classList.add('d-none');
+        weekStartInput.value = '';
+        weekEndInput.value = '';
+        toggleReportBtn.textContent = 'عرض التقرير';
+      } else {
+        if (!start || !end) {
+          alert('من فضلك اختر فترة التاريخ أولاً');
+          return;
+        }
+        reportCard.style.display = 'block';
+        visitFormCard.style.display = 'none';
+        weekInfo.classList.remove('d-none');
+        toggleReportBtn.textContent = 'إخفاء التقرير';
+        loadVisits(start, end);
+      }
+    });
+
+    // ✅ تحميل PDF
+    downloadBtn.addEventListener('click', async () => {
+      if (reportCard.style.display === 'none') {
+        alert('من فضلك اعرض التقرير أولاً');
+        return;
+      }
+
+      downloadBtn.style.display = 'none';
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const cloned = reportCard.cloneNode(true);
+      cloned.style.width = '794px';
+      cloned.style.position = 'absolute';
+      cloned.style.left = '-9999px';
+      document.body.appendChild(cloned);
+
+      const canvas = await html2canvas(cloned, { scale: 2 });
+      const imgData = canvas.toDataURL('image/png');
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const imgProps = pdf.getImageProperties(imgData);
+      const imgHeight = (imgProps.height * pageWidth) / imgProps.width;
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      pdf.addImage(imgData, 'PNG', 0, position, pageWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, pageWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+
+      pdf.save('تقرير_الزيارات.pdf');
+      document.body.removeChild(cloned);
+      downloadBtn.style.display = 'inline-block';
+    });
+  </script>
+</body>
+
+</html>
